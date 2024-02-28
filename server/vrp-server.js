@@ -185,10 +185,10 @@ let ProxyVRP = function(identify){
         return new Promise(res => { 
             //Isso está errado agora estamos trabalhando com MAP
             let rid = getUniqueId();
-    
+            callbacks.set(rid, res);
             dados = { args: args,identifier: identify,rid: rid}
             let json = JSON.stringify(dados)
-            
+
             emit("vRP:proxy",nomeEvento, '', '', rid,json)
         });
     }
