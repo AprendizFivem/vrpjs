@@ -1,16 +1,21 @@
-let callbacks = [];
 
-identify = GetCurrentResourceName();
 
-on('vRP'+':' + identify +':proxy_res', (rid,rets)=>{
-    if(callbacks[rid]){
-        let retorno = JSON.parse(rets)
-        callbacks[rid](retorno);
-        callbacks[rid] = null;
+let ProxyVRP = function(identify){
+
+    if(!identify){
+        identify = GetCurrentResourceName();
     }
-})
 
-let ProxyVRP = function(){
+    let callbacks = new Map();
+
+    on('vRP:' + identify +':proxy_res', async(rid, rets) => {
+        if(callbacks.has(rid)){
+            let callback = callbacks.get(rid);
+            let retorno = JSON.parse(rets);
+            callback(retorno);
+            callbacks.delete(rid);
+        }
+    });
 
     this.addUserGroup = function(user_id, group){
         let args = [...arguments];
@@ -178,20 +183,25 @@ let ProxyVRP = function(){
 
     function chamarVRPProxy(nomeEvento, args){
         return new Promise(res => { 
-            let num = callbacks.push(res);
-            let rid = num-1;
+            //Isso está errado agora estamos trabalhando com MAP
+            let rid = getUniqueId();
     
             dados = { args: args,identifier: identify,rid: rid}
             let json = JSON.stringify(dados)
             
-            emit("vRP"+":proxy",nomeEvento, '', '', rid,json)
+            emit("vRP:proxy",nomeEvento, '', '', rid,json)
         });
+    }
+
+    let id = 0;
+
+    function getUniqueId(){
+        return id++;
     }
 
 }
 
+
+
 module.exports = {ProxyVRP};
 module.exports.default = {ProxyVRP};
-
-
-exports("vrp", ProxyVRP);
